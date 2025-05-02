@@ -1,82 +1,94 @@
-#include <iostream>
-#include <vector>
+#include<iostream>
+#include<vector>
+#include<cstring>
 using namespace std;
-char arr[3][3];
-bool visit[3][3];
-int dx[4] = { 0,0,-1,1 };
-int dy[4] = { 1,-1,0,0 };
-int n, m;
+int n, m;	// n : 만들어야 할 수, m : 개수
+int map[3][3];
+int ydir[] = { -1,0,1,0 };
+int xdir[] = { 0,1,0,-1 };
+int visited[3][3];
+bool flag = false;
+struct Node
+{
+	int num;
+	int y;
+	int x;
+};
+vector<Node>v;
+void dfs(int now, int y, int x) {
+	if (flag)return;
+	if (now == m * 2 - 1) {
+		//for (int i = 0; i < v.size(); i++)
+		//{
+		//	cout << v[i].num << " ";
+		//}
+		int total=v[0].num;
+		for (int i = 1; i < v.size(); i += 2)
+		{
+			if (v[i].num == 10)
+				total += v[i + 1].num;
+			else if (v[i].num == 11)
+				total -= v[i + 1].num;
+		}
+		//cout << "\n";
+		//cout << " : "<<total;
+		if (total == n) {
+			cout << 1 << "\n";
+			for (int i = 0; i < v.size(); i++)
+			{
+				cout << v[i].y << " " << v[i].x << "\n";
+			}
+			flag = true;
+		}
+		return;
+	}
+	for (int i = 0; i < 4; i++)
+	{
+		int ny = y + ydir[i];
+		int nx = x + xdir[i];
 
-vector<pair<int, int>> path;
+		if (ny < 0 || ny >= 3 || nx < 0 || nx >= 3)continue;
+		if (visited[ny][nx] == 1)continue;
+		visited[ny][nx] = 1;
+		v.push_back({ map[ny][nx], ny, nx });
+		dfs(now + 1, ny, nx);
+		visited[ny][nx] = 0;
+		v.pop_back();
+	}
+	
 
-void getpath(int stx, int sty, vector<pair<int, int>> way) { // dfs
-    if (way.size() == (2 * m - 1)) {
-        int val = 0;
-        for (int i = 0; i < way.size(); i++) {
-            int wx = way[i].first;
-            int wy = way[i].second;
-            char v = arr[wx][wy];
-            if (i == 0) {
-                val =  (v - '0');
-            }
-            else if (i % 2 == 0) {
-                char op = arr[way[i - 1].first][way[i - 1].second];
-                if (op == '-') {
-                    val -= (v - '0');
-                }
-                else if (op == '+') {
-                    val += (v - '0');
-                }
-            }
-        }
-        if (val == n) {
-            path = way;
-        }
-        return;
-    }
-    for (int i = 0; i < 4; i++) {
-        int nx = stx + dx[i];
-        int ny = sty + dy[i];
-        if (0 <= nx && nx < 3 && 0 <= ny && ny < 3 && !visit[nx][ny]) {
-            visit[nx][ny] = true;
-            way.push_back({ nx, ny });
-            getpath(nx, ny, way);
-            way.pop_back();
-            visit[nx][ny] = false;
-        }
-    }
 }
+int main() {
+	cin >> n >> m;
+	for (int i = 0; i < 3; i++)
+	{
+		for (int j = 0; j < 3; j++)
+		{
+			char ch;
+			cin >> ch;
+			if (ch >= '0' && ch <= '9')
+				map[i][j] = ch - '0';
+			else if (ch == '+')
+				map[i][j] = 10;	// 플러스는 10
+			else if (ch == '-')
+				map[i][j] = 11;	// 마이너스는 11
+		}
+	}
 
+	for (int i = 0; i < 3; i++)
+	{
+		for (int j = 0; j < 3; j++)
+		{
+			if (flag)break;
+			if ((i + j) % 2 == 1)continue;
+			memset(visited, 0, sizeof(visited));
+			visited[i][j] = 1;
 
-int main(){
-    cin >> n >> m;
-    
-    for (int i = 0; i < 3; i++) {
-        for (int j = 0; j < 3; j++) {
-            cin >> arr[i][j];
-        }
-    }
-    
-    
-
-    for (int i = 0; i < 3; i++) {
-        for (int j = 0; j < 3; j++) {
-            if ('0' <= arr[i][j] && arr[i][j] <= '9') {
-                vector<pair<int, int>> memory;
-                visit[i][j] = true;
-                memory.push_back({ i, j });
-                getpath(i, j, memory);
-                visit[i][j] = false;
-            }
-        }
-    }
-    if (path.size() != 0) {
-        cout << "1\n";
-        for (pair<int, int> p : path) {
-            cout << p.first << " " << p.second << "\n";
-        }
-    }
-    else {
-        cout << "0";
-    }
+			v.clear();
+			v.push_back({ map[i][j], i, j });
+			dfs(1, i, j);
+		}
+	}
+	if(!flag)
+		cout << 0 << "\n";
 }
